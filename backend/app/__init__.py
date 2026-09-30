@@ -85,6 +85,10 @@ def create_app():
     app.register_blueprint(payment_bp, url_prefix="/api/payment")
     app.register_blueprint(user_bp, url_prefix="/api/user")
 
+    @app.route("/")
+    def index():
+        return {"service": "ResumeAI backend", "status": "ok", "health": "/api/health"}, 200
+
     # ── Health Check ──────────────────────────────────────────
     @app.route("/api/health")
     def health():

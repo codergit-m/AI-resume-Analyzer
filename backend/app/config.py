@@ -37,6 +37,10 @@ class BaseConfig:
     # ── CORS ──────────────────────────────────────────────
     FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
 
+    # ── Platform ownership ───────────────────────────────
+    ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "monusinghgit@gmail.com").strip().lower()
+    ADMIN_NAME = os.environ.get("ADMIN_NAME", "Monu Singh Chauhan").strip()
+
     # ── Firebase Admin SDK ────────────────────────────────
     # Set ONE of these environment variables:
     #   FIREBASE_SERVICE_ACCOUNT_JSON — full JSON string (good for env vars)

@@ -10,7 +10,7 @@ Flow:
 """
 
 from datetime import datetime, timezone
-from flask import Blueprint, request, jsonify, g
+from flask import Blueprint, request, jsonify, g, current_app
 
 from ..extensions import db
 from ..models.user import User
@@ -36,6 +36,7 @@ def register():
     email = firebase_user["email"].strip().lower()
     data = request.get_json() or {}
     full_name = (data.get("full_name") or firebase_user.get("name") or "").strip()[:200]
+    is_designated_admin = email == current_app.config["ADMIN_EMAIL"]
 
     if not full_name:
         return error_response("full_name is required")
@@ -48,16 +49,16 @@ def register():
     if user:
         # Update profile on re-register / name change / migration
         user.firebase_uid = uid
-        user.full_name = "Shivam chauhan" if email == "sc5445889@gmail.com" else full_name
-        user.role = "admin" if email == "sc5445889@gmail.com" else user.role
+        user.full_name = current_app.config["ADMIN_NAME"] if is_designated_admin else full_name
+        user.role = "admin" if is_designated_admin else "user"
         user.last_login = datetime.now(timezone.utc)
     else:
         user = User(
             firebase_uid=uid,
             email=email,
-            full_name="Shivam chauhan" if email == "sc5445889@gmail.com" else full_name,
+            full_name=current_app.config["ADMIN_NAME"] if is_designated_admin else full_name,
             subscription_active=False,
-            role="admin" if email == "sc5445889@gmail.com" else "user",
+            role="admin" if is_designated_admin else "user",
             analysis_count=0
         )
         db.session.add(user)

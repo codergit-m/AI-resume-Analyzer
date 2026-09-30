@@ -18,6 +18,9 @@ app = create_app()
 with app.app_context():
     db.create_all()
 
+    admin_email = app.config["ADMIN_EMAIL"]
+    admin_name = app.config["ADMIN_NAME"]
+
     # Clean up old default admin user to avoid UNIQUE constraint conflicts
     old_admin_by_email = User.query.filter_by(email="admin@resumai.local").first()
     if old_admin_by_email:
@@ -31,25 +34,26 @@ with app.app_context():
         db.session.commit()
         print("Removed old default admin UID: mock-admin-uid")
 
-    # Check if shivam admin already exists
-    existing = User.query.filter_by(email="sc5445889@gmail.com").first()
+    # There must be exactly one database admin: the designated owner.
+    User.query.filter(User.role == "admin", User.email != admin_email).update(
+        {User.role: "user"}, synchronize_session=False
+    )
+
+    existing = User.query.filter_by(email=admin_email).first()
     if existing:
         print("Admin user already exists:", existing.email)
-        existing.full_name = "Shivam chauhan"
+        existing.full_name = admin_name
         existing.role = "admin"
-        if not existing.firebase_uid:
-            existing.firebase_uid = "mock-admin-uid"
         db.session.commit()
     else:
         admin = User(
-            email="sc5445889@gmail.com",
-            firebase_uid="mock-admin-uid",
-            full_name="Shivam chauhan",
+            email=admin_email,
+            full_name=admin_name,
             role="admin",
         )
         db.session.add(admin)
         db.session.commit()
         print("[OK] Admin created!")
-        print("   Email:    sc5445889@gmail.com")
-        print("   Name:     Shivam chauhan")
+        print("   Email:    ", admin_email)
+        print("   Name:     ", admin_name)
         print("   [!] Make sure to sign up with this email on the frontend/Firebase to link your account!")
